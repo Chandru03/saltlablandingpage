@@ -5,8 +5,22 @@ import { ArrowRight, Mail, ArrowUpRight, Sparkles, Zap, Cpu, Smartphone } from '
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import confetti from 'canvas-confetti';
+import saltlabLogoSvg from '../saltlab-logo.svg?raw';
+import { addEmailToWaitlist } from '@/lib/waitlist';
 
 gsap.registerPlugin(ScrollTrigger);
+
+const normalizedSaltlabLogoSvg = saltlabLogoSvg
+  .replace(/fill="#(?:1A1A1A|F5F4F0)"/gi, 'fill="currentColor"')
+  .replace(/stroke="#(?:1A1A1A|F5F4F0)"/gi, 'stroke="currentColor"');
+
+const SaltlabLogo = ({ className }: { className?: string }) => (
+  <span
+    className={`${className ?? ''} inline-block [&>svg]:block [&>svg]:h-full [&>svg]:w-full`}
+    aria-hidden="true"
+    dangerouslySetInnerHTML={{ __html: normalizedSaltlabLogoSvg }}
+  />
+);
 
 /* ─── Confetti Burst ─── */
 const fireConfetti = () => {
@@ -222,12 +236,7 @@ const Navbar = () => {
     >
       <div className="max-w-7xl mx-auto px-6 md:px-10 flex items-center justify-between">
         <div className="nav-item flex items-center gap-3">
-          <img
-            src="/saltlab-logo.png"
-            alt="Saltlab"
-            className="w-8 h-8 invert brightness-200 contrast-200"
-            style={{ mixBlendMode: 'screen' }}
-          />
+          <SaltlabLogo className="w-8 h-8 text-salt" />
           <span className="font-display font-semibold text-lg tracking-tight text-salt">
             saltlab
           </span>
@@ -832,7 +841,8 @@ const Status = () => {
   const contentRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const [email, setEmail] = useState('');
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submissionState, setSubmissionState] = useState<'idle' | 'submitting' | 'success' | 'duplicate' | 'error'>('idle');
+  const [submissionMessage, setSubmissionMessage] = useState('');
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -862,33 +872,47 @@ const Status = () => {
   }, []);
 
   const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
+    async (e: React.FormEvent) => {
       e.preventDefault();
-      if (email) {
-        setIsSubmitted(true);
+      if (!email || submissionState === 'submitting') return;
 
-        // Fire confetti
+      try {
+        setSubmissionState('submitting');
+        setSubmissionMessage('');
+
+        const result = await addEmailToWaitlist(email);
+
+        if (result.status === 'duplicate') {
+          setSubmissionState('duplicate');
+          setSubmissionMessage("This email is already on the waitlist.");
+          return;
+        }
+
+        setSubmissionState('success');
+        setSubmissionMessage("You're on the list. We'll reach out when it's time.");
+        setEmail('');
         fireConfetti();
 
-        // Animate the success message in
-        setTimeout(() => {
+        requestAnimationFrame(() => {
           const successEl = document.querySelector('.success-message');
-          if (successEl) {
-            gsap.fromTo(
-              successEl,
-              { scale: 0.8, opacity: 0, y: 20 },
-              { scale: 1, opacity: 1, y: 0, duration: 0.6, ease: 'back.out(2)' }
-            );
-          }
-        }, 50);
+          if (!successEl) return;
 
-        setTimeout(() => {
-          setIsSubmitted(false);
-          setEmail('');
-        }, 5000);
+          gsap.fromTo(
+            successEl,
+            { scale: 0.8, opacity: 0, y: 20 },
+            { scale: 1, opacity: 1, y: 0, duration: 0.6, ease: 'back.out(2)' }
+          );
+        });
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : 'Unable to join the waitlist right now.';
+        setSubmissionState('error');
+        setSubmissionMessage(message);
       }
     },
-    [email]
+    [email, submissionState]
   );
 
   return (
@@ -920,36 +944,58 @@ const Status = () => {
               Drop your email to be first to know when we launch.
             </p>
 
-            {isSubmitted ? (
+            {submissionState === 'success' ? (
               <div className="success-message flex items-center gap-4 py-4">
                 <div className="w-12 h-12 rounded-full bg-green-400/10 flex items-center justify-center animate-bounce">
                   <Sparkles className="w-6 h-6 text-green-400" />
                 </div>
                 <div>
                   <p className="text-salt font-display font-semibold text-lg">You're on the list!</p>
-                  <p className="text-mineral text-sm">We'll reach out when it's time. Stay tuned.</p>
+                  <p className="text-mineral text-sm">{submissionMessage}</p>
                 </div>
               </div>
             ) : (
-              <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
-                <div className="flex-1 relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-mineral/50" />
-                  <Input
-                    type="email"
-                    placeholder="your@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-11 h-13 bg-white/[0.03] border-white/[0.08] text-salt placeholder:text-mineral/40 focus:border-signal/50 focus:ring-signal/20 rounded-xl transition-all duration-300 focus:shadow-[0_0_20px_rgba(74,144,217,0.1)]"
-                    required
-                  />
+              <form ref={formRef} onSubmit={handleSubmit} className="space-y-3">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex-1 relative">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-mineral/50" />
+                    <Input
+                      type="email"
+                      placeholder="your@email.com"
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (submissionState !== 'idle') {
+                          setSubmissionState('idle');
+                          setSubmissionMessage('');
+                        }
+                      }}
+                      className="pl-11 h-13 bg-white/[0.03] border-white/[0.08] text-salt placeholder:text-mineral/40 focus:border-signal/50 focus:ring-signal/20 rounded-xl transition-all duration-300 focus:shadow-[0_0_20px_rgba(74,144,217,0.1)]"
+                      required
+                      aria-describedby="waitlist-feedback"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    disabled={submissionState === 'submitting'}
+                    className="h-13 px-8 bg-signal hover:bg-signal/90 text-white rounded-xl font-medium transition-all duration-300 hover:shadow-[0_0_30px_rgba(74,144,217,0.25)] active:scale-95 group cursor-pointer disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {submissionState === 'submitting' ? 'Joining...' : 'Get notified'}
+                    <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
+                  </Button>
                 </div>
-                <Button
-                  type="submit"
-                  className="h-13 px-8 bg-signal hover:bg-signal/90 text-white rounded-xl font-medium transition-all duration-300 hover:shadow-[0_0_30px_rgba(74,144,217,0.25)] active:scale-95 group cursor-pointer"
+                <p
+                  id="waitlist-feedback"
+                  className={`text-sm ${
+                    submissionState === 'error'
+                      ? 'text-red-300'
+                      : submissionState === 'duplicate'
+                        ? 'text-mineral'
+                        : 'text-mineral/70'
+                  }`}
                 >
-                  Get notified
-                  <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
-                </Button>
+                  {submissionMessage || 'Join the waitlist to hear when the first app ships.'}
+                </p>
               </form>
             )}
           </div>
@@ -1021,12 +1067,7 @@ const Footer = () => {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <img
-                src="/saltlab-logo.png"
-                alt="Saltlab"
-                className="w-6 h-6 invert brightness-200 contrast-200"
-                style={{ mixBlendMode: 'screen' }}
-              />
+              <SaltlabLogo className="w-6 h-6 text-salt" />
               <span className="font-display font-semibold text-salt">saltlab</span>
             </div>
             <p className="text-mineral text-sm leading-relaxed">
@@ -1077,7 +1118,7 @@ const Footer = () => {
             &copy; {new Date().getFullYear()} Saltlab. All rights reserved.
           </p>
           <p className="font-mono-brand text-[10px] text-mineral/30 tracking-wider">
-            built with obsession from india
+            built somewhere between india and lithuania
           </p>
         </div>
       </div>
