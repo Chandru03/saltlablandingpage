@@ -105,6 +105,7 @@ const CustomCursor = () => {
     const dot = dotRef.current;
     const ring = ringRef.current;
     if (!dot || !ring) return;
+    const interactiveListeners = new Map<Element, { enter: () => void; leave: () => void }>();
 
     const moveCursor = (e: MouseEvent) => {
       gsap.to(dot, { x: e.clientX - 4, y: e.clientY - 4, duration: 0.08, ease: 'power2.out' });
@@ -125,8 +126,13 @@ const CustomCursor = () => {
     const observe = () => {
       const interactives = document.querySelectorAll('a, button, input, .magnetic-btn, .glass-card-hover');
       interactives.forEach((el) => {
-        el.addEventListener('mouseenter', grow);
-        el.addEventListener('mouseleave', shrink);
+        if (interactiveListeners.has(el)) return;
+
+        const enter = () => grow();
+        const leave = () => shrink();
+        interactiveListeners.set(el, { enter, leave });
+        el.addEventListener('mouseenter', enter);
+        el.addEventListener('mouseleave', leave);
       });
     };
 
@@ -138,6 +144,10 @@ const CustomCursor = () => {
     return () => {
       window.removeEventListener('mousemove', moveCursor);
       mo.disconnect();
+      interactiveListeners.forEach(({ enter, leave }, el) => {
+        el.removeEventListener('mouseenter', enter);
+        el.removeEventListener('mouseleave', leave);
+      });
     };
   }, []);
 
@@ -180,6 +190,7 @@ const Navbar = () => {
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
+    handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -239,8 +250,10 @@ const Navbar = () => {
 const Hero = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const subParallaxRef = useRef<HTMLDivElement>(null);
   const subRef = useRef<HTMLParagraphElement>(null);
   const tagRef = useRef<HTMLDivElement>(null);
+  const ctaParallaxRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
   const ctaBtnRef = useRef<HTMLAnchorElement>(null);
   const floatARef = useRef<HTMLDivElement>(null);
@@ -334,7 +347,6 @@ const Hero = () => {
       // Parallax — gentle, only after 60%
       gsap.to(headingRef.current, {
         y: -60,
-        opacity: 0.5,
         scrollTrigger: {
           trigger: sectionRef.current,
           start: '60% top',
@@ -343,10 +355,9 @@ const Hero = () => {
         },
       });
 
-      // Parallax on sub + CTA
-      gsap.to([subRef.current, ctaRef.current], {
-        y: -30,
-        opacity: 0.3,
+      // Keep scroll motion on wrappers so the revealed elements do not revert to hidden states.
+      gsap.to([subParallaxRef.current, ctaParallaxRef.current], {
+        y: -24,
         scrollTrigger: {
           trigger: sectionRef.current,
           start: '50% top',
@@ -430,32 +441,36 @@ const Hero = () => {
         </h1>
 
         {/* Sub */}
-        <p
-          ref={subRef}
-          className="text-lg md:text-xl text-mineral max-w-xl mx-auto leading-relaxed mb-10"
-          style={{ visibility: 'hidden' }}
-        >
-          Focused iOS utilities powered by AI.{' '}
-          <span className="text-salt/80">No bloat. No fluff.</span>{' '}
-          Just tools that do one thing really well.
-        </p>
+        <div ref={subParallaxRef}>
+          <p
+            ref={subRef}
+            className="text-lg md:text-xl text-mineral max-w-xl mx-auto leading-relaxed mb-10"
+            style={{ visibility: 'hidden' }}
+          >
+            Focused iOS utilities powered by AI.{' '}
+            <span className="text-salt/80">No bloat. No fluff.</span>{' '}
+            Just tools that do one thing really well.
+          </p>
+        </div>
 
         {/* CTA */}
-        <div ref={ctaRef} className="flex flex-col sm:flex-row gap-4 justify-center" style={{ visibility: 'hidden' }}>
-          <a
-            ref={ctaBtnRef}
-            href="#status"
-            className="magnetic-btn group inline-flex items-center gap-2 px-8 py-4 bg-signal text-white rounded-full font-medium text-sm transition-all duration-300 hover:shadow-[0_0_40px_rgba(74,144,217,0.3)] hover:scale-105 active:scale-95"
-          >
-            Get early access
-            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-          </a>
-          <a
-            href="#about"
-            className="magnetic-btn inline-flex items-center gap-2 px-8 py-4 border border-white/10 text-salt rounded-full font-medium text-sm transition-all duration-300 hover:border-white/25 hover:bg-white/[0.03] active:scale-95"
-          >
-            Learn more
-          </a>
+        <div ref={ctaParallaxRef}>
+          <div ref={ctaRef} className="flex flex-col sm:flex-row gap-4 justify-center" style={{ visibility: 'hidden' }}>
+            <a
+              ref={ctaBtnRef}
+              href="#status"
+              className="magnetic-btn group inline-flex items-center gap-2 px-8 py-4 bg-signal text-white rounded-full font-medium text-sm transition-all duration-300 hover:shadow-[0_0_40px_rgba(74,144,217,0.3)] hover:scale-105 active:scale-95"
+            >
+              Get early access
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </a>
+            <a
+              href="#about"
+              className="magnetic-btn inline-flex items-center gap-2 px-8 py-4 border border-white/10 text-salt rounded-full font-medium text-sm transition-all duration-300 hover:border-white/25 hover:bg-white/[0.03] active:scale-95"
+            >
+              Learn more
+            </a>
+          </div>
         </div>
       </div>
 
@@ -476,27 +491,30 @@ const Marquee = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!trackRef.current) return;
-    const track = trackRef.current;
-    const width = track.scrollWidth / 2;
+    const ctx = gsap.context(() => {
+      if (!trackRef.current) return;
+      const track = trackRef.current;
+      const width = track.scrollWidth / 2;
 
-    const tween = gsap.to(track, {
-      x: -width,
-      duration: 20,
-      ease: 'none',
-      repeat: -1,
-    });
+      const tween = gsap.to(track, {
+        x: -width,
+        duration: 20,
+        ease: 'none',
+        repeat: -1,
+      });
 
-    // Speed up on scroll
-    ScrollTrigger.create({
-      trigger: sectionRef.current,
-      start: 'top bottom',
-      end: 'bottom top',
-      onUpdate: (self) => {
-        const velocity = Math.abs(self.getVelocity() / 1000);
-        gsap.to(tween, { timeScale: 1 + velocity * 0.5, duration: 0.3 });
-      },
-    });
+      ScrollTrigger.create({
+        trigger: sectionRef.current,
+        start: 'top bottom',
+        end: 'bottom top',
+        onUpdate: (self) => {
+          const velocity = Math.abs(self.getVelocity() / 1000);
+          gsap.to(tween, { timeScale: 1 + velocity * 0.5, duration: 0.3 });
+        },
+      });
+    }, sectionRef);
+
+    return () => ctx.revert();
   }, []);
 
   const items = [
@@ -545,7 +563,7 @@ const About = () => {
             scrollTrigger: {
               trigger: headingRef.current,
               start: 'top 85%',
-              toggleActions: 'play none none reverse',
+              toggleActions: 'play none none none',
             },
           }
         );
@@ -567,7 +585,7 @@ const About = () => {
             scrollTrigger: {
               trigger: cardsRef.current,
               start: 'top 80%',
-              toggleActions: 'play none none reverse',
+              toggleActions: 'play none none none',
             },
           }
         );
@@ -669,7 +687,7 @@ const Philosophy = () => {
           scrollTrigger: {
             trigger: sectionRef.current,
             start: 'top 80%',
-            toggleActions: 'play none none reverse',
+            toggleActions: 'play none none none',
           },
         }
       );
@@ -748,7 +766,7 @@ const Highlights = () => {
           scrollTrigger: {
             trigger: itemsRef.current,
             start: 'top 80%',
-            toggleActions: 'play none none reverse',
+            toggleActions: 'play none none none',
           },
         }
       );
@@ -764,7 +782,7 @@ const Highlights = () => {
           scrollTrigger: {
             trigger: itemsRef.current,
             start: 'top 80%',
-            toggleActions: 'play none none reverse',
+            toggleActions: 'play none none none',
           },
           onUpdate: () => {
             counterEl.textContent = Math.round(target.val).toString();
@@ -834,7 +852,7 @@ const Status = () => {
           scrollTrigger: {
             trigger: contentRef.current,
             start: 'top 85%',
-            toggleActions: 'play none none reverse',
+            toggleActions: 'play none none none',
           },
         }
       );
@@ -960,7 +978,7 @@ const Footer = () => {
           scrollTrigger: {
             trigger: footerRef.current,
             start: 'top 90%',
-            toggleActions: 'play none none reverse',
+            toggleActions: 'play none none none',
           },
         }
       );
@@ -977,7 +995,7 @@ const Footer = () => {
           scrollTrigger: {
             trigger: footerRef.current,
             start: 'top 85%',
-            toggleActions: 'play none none reverse',
+            toggleActions: 'play none none none',
           },
         }
       );
@@ -990,7 +1008,7 @@ const Footer = () => {
     <footer ref={footerRef} className="py-16 md:py-24 px-6 md:px-10 border-t border-white/[0.04]">
       <div className="max-w-7xl mx-auto">
         {/* Big brand text */}
-        <div className="mb-16" style={{ opacity: 0 }}>
+        <div className="mb-16">
           <h2
             ref={bigTextRef}
             className="font-display text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter text-white/[0.04] select-none"
