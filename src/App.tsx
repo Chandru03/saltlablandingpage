@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { ArrowRight, Mail, ArrowUpRight, Sparkles, Zap, Cpu, Smartphone } from 'lucide-react';
+import { ArrowRight, Mail, ArrowUpRight, Sparkles, Zap, Cpu, Smartphone, Bell, Brain, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import confetti from 'canvas-confetti';
 import saltlabLogoSvg from '../saltlab-logo.svg?raw';
+import spilllIconArt from '../sneak-peek/Spilll/1.png';
+import spilllTodayShot from '../sneak-peek/Spilll/screenshot2.jpeg';
+import spilllOnboardingShot from '../sneak-peek/Spilll/simulator_screenshot_C1251AB7-85E4-4E07-A781-0B36D563D773.png';
+import spilllMarkSvg from '../sneak-peek/Spilll/spilll.svg?raw';
 import { addEmailToWaitlist } from '@/lib/waitlist';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -14,11 +18,23 @@ const normalizedSaltlabLogoSvg = saltlabLogoSvg
   .replace(/fill="#(?:1A1A1A|F5F4F0)"/gi, 'fill="currentColor"')
   .replace(/stroke="#(?:1A1A1A|F5F4F0)"/gi, 'stroke="currentColor"');
 
+const normalizedSpilllMarkSvg = spilllMarkSvg
+  .replace(/fill="#(?:[0-9A-F]{3}|[0-9A-F]{6})"/gi, 'fill="currentColor"')
+  .replace(/stroke="#(?:[0-9A-F]{3}|[0-9A-F]{6})"/gi, 'stroke="currentColor"');
+
 const SaltlabLogo = ({ className }: { className?: string }) => (
   <span
     className={`${className ?? ''} inline-block [&>svg]:block [&>svg]:h-full [&>svg]:w-full`}
     aria-hidden="true"
     dangerouslySetInnerHTML={{ __html: normalizedSaltlabLogoSvg }}
+  />
+);
+
+const SpilllMark = ({ className }: { className?: string }) => (
+  <span
+    className={`${className ?? ''} inline-block [&>svg]:block [&>svg]:h-full [&>svg]:w-full`}
+    aria-hidden="true"
+    dangerouslySetInnerHTML={{ __html: normalizedSpilllMarkSvg }}
   />
 );
 
@@ -243,6 +259,7 @@ const Navbar = () => {
         </div>
         <div className="hidden md:flex items-center gap-8 text-sm text-mineral">
           <a href="#about" className="nav-item hover:text-salt transition-colors duration-300">about</a>
+          <a href="#spilll" className="nav-item hover:text-salt transition-colors duration-300">sneak peek</a>
           <a href="#philosophy" className="nav-item hover:text-salt transition-colors duration-300">philosophy</a>
           <a href="#status" className="nav-item hover:text-salt transition-colors duration-300">status</a>
         </div>
@@ -835,6 +852,362 @@ const Highlights = () => {
   );
 };
 
+/* ─── Spilll Sneak Peek ─── */
+const SpilllSneakPeek = () => {
+  const sectionRef = useRef<HTMLElement>(null);
+  const headingRef = useRef<HTMLDivElement>(null);
+  const phonesRef = useRef<HTMLDivElement>(null);
+  const chipsRef = useRef<HTMLDivElement>(null);
+  const orbARef = useRef<HTMLDivElement>(null);
+  const orbBRef = useRef<HTMLDivElement>(null);
+  const tiltCleanupRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      if (!sectionRef.current) return;
+
+      gsap.fromTo(
+        headingRef.current?.children ?? [],
+        { y: 50, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.9,
+          stagger: 0.12,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: headingRef.current,
+            start: 'top 82%',
+            toggleActions: 'play none none none',
+          },
+        }
+      );
+
+      if (phonesRef.current) {
+        gsap.fromTo(
+          phonesRef.current.children,
+          { y: 80, opacity: 0, rotate: (i) => (i % 2 === 0 ? -8 : 8), scale: 0.92 },
+          {
+            y: 0,
+            opacity: 1,
+            rotate: (i) => (i % 2 === 0 ? -2 : 2),
+            scale: 1,
+            duration: 1.2,
+            stagger: 0.15,
+            ease: 'power4.out',
+            scrollTrigger: {
+              trigger: phonesRef.current,
+              start: 'top 85%',
+              toggleActions: 'play none none none',
+            },
+          }
+        );
+
+        const floatingCards = phonesRef.current.querySelectorAll('.spilll-float');
+        gsap.to(floatingCards, {
+          y: (i) => (i % 2 === 0 ? -14 : 14),
+          duration: 3.6,
+          repeat: -1,
+          yoyo: true,
+          ease: 'sine.inOut',
+          stagger: 0.2,
+        });
+
+        gsap.to(phonesRef.current, {
+          y: -40,
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: 1.2,
+          },
+        });
+      }
+
+      if (chipsRef.current) {
+        gsap.fromTo(
+          chipsRef.current.children,
+          { x: -24, opacity: 0 },
+          {
+            x: 0,
+            opacity: 1,
+            duration: 0.6,
+            stagger: 0.08,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: chipsRef.current,
+              start: 'top 88%',
+              toggleActions: 'play none none none',
+            },
+          }
+        );
+      }
+
+      gsap.fromTo(
+        '.spilll-feature-card',
+        { y: 36, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          stagger: 0.12,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: 'top 70%',
+            toggleActions: 'play none none none',
+          },
+        }
+      );
+
+      gsap.to('.spilll-chip', {
+        y: -5,
+        duration: 1.8,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut',
+        stagger: 0.12,
+      });
+
+      gsap.to('.spilll-avatar-inline', {
+        y: -3,
+        scale: 1.03,
+        duration: 2.2,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut',
+      });
+      gsap.to('.spilll-avatar-inline-glow', {
+        opacity: 0.22,
+        scale: 1.08,
+        duration: 2.1,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut',
+      });
+
+      gsap.to('.spilll-gradient-wash', {
+        backgroundPosition: '200% 50%',
+        duration: 12,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut',
+      });
+
+      gsap.fromTo(
+        '.spilll-caption',
+        { y: 12, opacity: 0.3 },
+        {
+          y: 0,
+          opacity: 0.9,
+          duration: 0.8,
+          stagger: 0.15,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: 'top 78%',
+            toggleActions: 'play none none none',
+          },
+        }
+      );
+
+      gsap.to(orbARef.current, {
+        x: 24,
+        y: -20,
+        duration: 5,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut',
+      });
+      gsap.to(orbBRef.current, {
+        x: -26,
+        y: 18,
+        duration: 6,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut',
+      });
+
+      const supportsHover =
+        typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches;
+      if (supportsHover && phonesRef.current) {
+        const tiltCards = phonesRef.current.querySelectorAll<HTMLElement>('.spilll-tilt');
+
+        const onMove = (event: PointerEvent) => {
+          tiltCards.forEach((card) => {
+            const rect = card.getBoundingClientRect();
+            const px = (event.clientX - rect.left) / rect.width - 0.5;
+            const py = (event.clientY - rect.top) / rect.height - 0.5;
+            gsap.to(card, {
+              rotateY: px * 10,
+              rotateX: py * -10,
+              duration: 0.35,
+              ease: 'power2.out',
+              transformPerspective: 900,
+              transformOrigin: 'center center',
+            });
+          });
+        };
+
+        const onLeave = () => {
+          tiltCards.forEach((card) => {
+            gsap.to(card, { rotateX: 0, rotateY: 0, duration: 0.55, ease: 'power3.out' });
+          });
+        };
+
+        sectionRef.current.addEventListener('pointermove', onMove);
+        sectionRef.current.addEventListener('pointerleave', onLeave);
+
+        tiltCleanupRef.current = () => {
+          sectionRef.current?.removeEventListener('pointermove', onMove);
+          sectionRef.current?.removeEventListener('pointerleave', onLeave);
+        };
+      }
+    }, sectionRef);
+
+    return () => {
+      tiltCleanupRef.current?.();
+      tiltCleanupRef.current = null;
+      ctx.revert();
+    };
+  }, []);
+
+  const features = [
+    {
+      icon: <Bell className="w-4 h-4 text-signal" />,
+      title: 'daily nudges',
+      desc: 'Spilll comes to you first through notifications + widget.',
+    },
+    {
+      icon: <MessageCircle className="w-4 h-4 text-signal" />,
+      title: 'tap-first check-ins',
+      desc: 'No blank page anxiety. Just pick a vibe and keep moving.',
+    },
+    {
+      icon: <Brain className="w-4 h-4 text-signal" />,
+      title: 'memory that compounds',
+      desc: 'Questions get more personal as Spilll learns your story.',
+    },
+  ];
+
+  return (
+    <section ref={sectionRef} id="spilll" className="relative py-24 md:py-40 px-6 md:px-10 overflow-hidden">
+      <div className="spilll-gradient-wash absolute inset-0 pointer-events-none" />
+      <SpilllMark className="spilll-bg-mark absolute bottom-[12%] left-[6%] w-11 md:w-14 text-[#E8E4DC]/35 pointer-events-none hidden md:block" />
+      <div
+        ref={orbARef}
+        className="absolute -top-20 -left-20 w-72 h-72 rounded-full blur-3xl pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(189,47,255,0.18) 0%, transparent 70%)' }}
+      />
+      <div
+        ref={orbBRef}
+        className="absolute -bottom-24 right-0 w-80 h-80 rounded-full blur-3xl pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(255,115,0,0.2) 0%, transparent 70%)' }}
+      />
+
+      <div className="max-w-7xl mx-auto relative z-10">
+        <div ref={headingRef} className="mb-12 md:mb-16 space-y-5">
+          <div className="inline-flex items-center gap-3">
+            <span className="pill inline-flex">sneak peek</span>
+            <span className="spilll-avatar-inline" aria-hidden="true">
+              <span className="spilll-avatar-inline-glow" />
+              <SpilllMark className="spilll-avatar-inline-core text-[#F5F4F0]" />
+            </span>
+          </div>
+          <h2 className="font-display text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[0.95] text-salt">
+            meet spilll.
+            <br />
+            <span className="gradient-text-signal">journaling that texts back.</span>
+          </h2>
+          <p className="text-mineral text-base md:text-lg max-w-2xl leading-relaxed">
+            We are building an iOS daily check-in companion that feels like chatting with a GenZ friend.
+            Tap-based, memory-aware, and designed to show up every day.
+          </p>
+        </div>
+
+        <div className="grid lg:grid-cols-12 gap-10 md:gap-12 items-start">
+          <div className="lg:col-span-5 space-y-7">
+            <div ref={chipsRef} className="flex flex-wrap gap-3">
+              {[
+                '30-second mood drops',
+                'rant without overthinking',
+                'an AI that remembers your life',
+                'sunday wrapped, made for sharing',
+              ].map((chip) => (
+                <span key={chip} className="spilll-chip" style={{ opacity: 0 }}>
+                  {chip}
+                </span>
+              ))}
+            </div>
+
+            <div className="space-y-4">
+              {features.map((feature, idx) => (
+                <div key={feature.title} className="spilll-feature-card glass-card rounded-2xl p-5" style={{ opacity: 0 }}>
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="w-8 h-8 rounded-full bg-signal/10 border border-signal/25 flex items-center justify-center">
+                      {feature.icon}
+                    </span>
+                    <p className="text-salt font-medium tracking-tight">{feature.title}</p>
+                    <span className="ml-auto font-mono-brand text-[10px] text-mineral/70">0{idx + 1}</span>
+                  </div>
+                  <p className="text-mineral text-sm leading-relaxed">{feature.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            <a
+              href="#status"
+              className="magnetic-btn inline-flex items-center gap-2 text-sm text-salt border border-white/10 px-5 py-3 rounded-full hover:border-signal/40 hover:bg-signal/[0.08] transition-all duration-300"
+            >
+              join the early list
+              <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
+
+          <div className="lg:col-span-7">
+            <div ref={phonesRef} className="relative spilll-phones-wrap min-h-[640px] md:min-h-[760px]" style={{ perspective: '1200px' }}>
+              <article className="spilll-art-card spilll-float spilll-tilt absolute left-0 top-6 w-[72%] md:w-[62%]" style={{ opacity: 0 }}>
+                <img
+                  src={spilllIconArt}
+                  alt="Spilll app icon and brand artwork"
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-auto rounded-[1.75rem] border border-white/10 shadow-[0_28px_80px_rgba(0,0,0,0.45)]"
+                />
+                <div className="spilll-art-glow" />
+              </article>
+
+              <article className="spilll-phone-card spilll-float spilll-tilt absolute right-0 top-24 md:top-28 w-[58%] md:w-[46%] z-30" style={{ opacity: 0 }}>
+                <div className="spilll-phone-shell">
+                  <img
+                    src={spilllOnboardingShot}
+                    alt="Spilll onboarding screen with sign up and log in options"
+                    loading="lazy"
+                    decoding="async"
+                    className="spilll-phone-image"
+                  />
+                </div>
+              </article>
+
+              <article className="spilll-phone-card spilll-tilt absolute left-[16%] md:left-[24%] top-[300px] md:top-[360px] w-[60%] md:w-[48%] z-40" style={{ opacity: 0 }}>
+                <div className="spilll-phone-shell">
+                  <img
+                    src={spilllTodayShot}
+                    alt="Spilll daily check-in screen with conversational prompts"
+                    loading="lazy"
+                    decoding="async"
+                    className="spilll-phone-image"
+                  />
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 /* ─── Status / CTA Section ─── */
 const Status = () => {
   const sectionRef = useRef<HTMLElement>(null);
@@ -1083,7 +1456,7 @@ const Footer = () => {
               Navigate
             </p>
             <div className="space-y-3">
-              {['about', 'philosophy', 'status'].map((link) => (
+              {['about', 'spilll', 'philosophy', 'status'].map((link) => (
                 <a
                   key={link}
                   href={`#${link}`}
@@ -1142,6 +1515,7 @@ function App() {
       <Marquee />
       <About />
       <Highlights />
+      <SpilllSneakPeek />
       <Philosophy />
       <Status />
       <Footer />
