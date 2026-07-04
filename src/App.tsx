@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { ArrowRight, Mail, ArrowUpRight, Sparkles, Zap, Cpu, Smartphone, Bell, Brain, MessageCircle } from 'lucide-react';
+import { ArrowRight, Mail, ArrowUpRight, Sparkles, Zap, Cpu, Smartphone, Bell, Brain, MessageCircle, Headphones, SlidersHorizontal, Github, Usb } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import confetti from 'canvas-confetti';
@@ -260,6 +260,7 @@ const Navbar = () => {
         <div className="hidden md:flex items-center gap-8 text-sm text-mineral">
           <a href="#about" className="nav-item hover:text-salt transition-colors duration-300">about</a>
           <a href="#spilll" className="nav-item hover:text-salt transition-colors duration-300">sneak peek</a>
+          <a href="#opensource" className="nav-item hover:text-salt transition-colors duration-300">open source</a>
           <a href="#philosophy" className="nav-item hover:text-salt transition-colors duration-300">philosophy</a>
           <a href="#status" className="nav-item hover:text-salt transition-colors duration-300">status</a>
         </div>
@@ -1499,6 +1500,221 @@ const Footer = () => {
   );
 };
 
+/* ─── Open Source / DAC Control Section ─── */
+const DacControl = () => {
+  const sectionRef = useRef<HTMLElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      const lines = headingRef.current?.querySelectorAll('.dac-line');
+      if (lines) {
+        gsap.fromTo(
+          lines,
+          { y: 60, opacity: 0, skewY: 3 },
+          {
+            y: 0,
+            opacity: 1,
+            skewY: 0,
+            duration: 1,
+            stagger: 0.12,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: headingRef.current,
+              start: 'top 85%',
+              toggleActions: 'play none none none',
+            },
+          }
+        );
+      }
+
+      if (panelRef.current) {
+        gsap.fromTo(
+          panelRef.current.children,
+          { y: 60, opacity: 0, scale: 0.96 },
+          {
+            y: 0,
+            opacity: 1,
+            scale: 1,
+            duration: 0.9,
+            stagger: 0.12,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: panelRef.current,
+              start: 'top 82%',
+              toggleActions: 'play none none none',
+            },
+          }
+        );
+      }
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, []);
+
+  const steps = [
+    { n: '01', t: 'Pick your DAC', d: 'Select your model from the list.' },
+    { n: '02', t: 'Controls appear', d: 'Filters, gain, output, volume — whatever the hardware exposes.' },
+    { n: '03', t: 'Tune in-browser', d: 'Talks to the DAC over WebHID. No install, nothing uploaded.' },
+  ];
+
+  const controlChips = ['Digital filter', 'Gain', 'Output mode', 'Volume', 'Balance', 'Presets'];
+  const comingSoon = ['iBasso DC Elite', 'FiiO KA series', 'Moondrop Dawn', 'Qudelix 5K', 'your DAC?'];
+
+  return (
+    <section
+      ref={sectionRef}
+      id="opensource"
+      className="relative py-24 md:py-40 px-6 md:px-10 overflow-hidden"
+    >
+      {/* Dot-grid backdrop — a subtle nod to the controller's own aesthetic */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: 'radial-gradient(rgba(245,244,240,0.05) 1px, transparent 1.5px)',
+          backgroundSize: '26px 26px',
+          maskImage: 'radial-gradient(ellipse at center, black 25%, transparent 72%)',
+          WebkitMaskImage: 'radial-gradient(ellipse at center, black 25%, transparent 72%)',
+        }}
+      />
+
+      <div className="max-w-7xl mx-auto relative">
+        <div className="grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
+          {/* Left — write-up */}
+          <div>
+            <span className="pill mb-6 inline-flex">
+              <span className="w-1.5 h-1.5 rounded-full bg-signal animate-pulse" />
+              open source
+            </span>
+            <h2
+              ref={headingRef}
+              className="font-display text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.05] text-salt"
+              style={{ perspective: '800px' }}
+            >
+              <div className="dac-line overflow-hidden" style={{ opacity: 0 }}>
+                <span className="inline-block">Control your DAC</span>
+              </div>
+              <div className="dac-line overflow-hidden" style={{ opacity: 0 }}>
+                <span className="gradient-text-signal inline-block">from the browser.</span>
+              </div>
+            </h2>
+
+            <p className="text-mineral text-base md:text-lg leading-relaxed mt-6 max-w-xl">
+              Portable and desktop USB DACs pack real hardware controls — digital filters, gain,
+              output mode, hardware volume — but the apps to drive them are locked to one platform,
+              when they exist at all. This is an open-source project to put every one of those
+              controls in a browser tab.
+            </p>
+            <p className="text-mineral text-base md:text-lg leading-relaxed mt-4 max-w-xl">
+              Open the web app, pick your DAC, and its controls show up automatically — no install,
+              no account, nothing leaves your machine. It starts with the one device I own, the
+              iBasso DC03 Pro. Every protocol is reverse-engineered in the open, so the community
+              can add the next device.
+            </p>
+
+            <div className="mt-8 grid sm:grid-cols-3 gap-4">
+              {steps.map((s) => (
+                <div key={s.n} className="glass-card rounded-2xl p-4">
+                  <span className="font-mono-brand text-xs text-signal">{s.n}</span>
+                  <p className="text-salt font-medium text-sm mt-2 tracking-tight">{s.t}</p>
+                  <p className="text-mineral text-xs leading-relaxed mt-1">{s.d}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right — device launch panel */}
+          <div ref={panelRef} className="space-y-4" style={{ perspective: '900px' }}>
+            {/* Live device: DC03 Pro */}
+            <a
+              href="/dc03-pro/"
+              className="glass-card glass-card-hover rounded-3xl p-7 md:p-8 block group relative overflow-hidden"
+              style={{ opacity: 0 }}
+            >
+              <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-signal/[0.1] to-transparent rounded-bl-full pointer-events-none" />
+              <div className="relative flex items-start justify-between gap-4 mb-6">
+                <div className="flex items-center gap-4">
+                  <span className="w-12 h-12 rounded-2xl bg-signal/10 border border-signal/25 flex items-center justify-center">
+                    <Headphones className="w-5 h-5 text-signal" />
+                  </span>
+                  <div>
+                    <p className="text-salt font-display font-semibold text-lg tracking-tight">iBasso DC03 Pro</p>
+                    <p className="text-mineral text-xs font-mono-brand mt-0.5">USB-C · 3.5mm DAC</p>
+                  </div>
+                </div>
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-mono-brand uppercase tracking-[0.15em] text-green-400 whitespace-nowrap">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 glow-dot animate-pulse" />
+                  live
+                </span>
+              </div>
+
+              <div className="relative flex flex-wrap gap-2 mb-7">
+                {controlChips.map((c) => (
+                  <span
+                    key={c}
+                    className="text-[11px] px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.08] text-mist"
+                  >
+                    {c}
+                  </span>
+                ))}
+              </div>
+
+              <div className="relative flex items-center justify-between">
+                <span className="inline-flex items-center gap-2 text-salt font-medium text-sm group-hover:text-signal transition-colors duration-300">
+                  <SlidersHorizontal className="w-4 h-4" />
+                  Launch controls
+                  <ArrowUpRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </span>
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-mono-brand uppercase tracking-[0.12em] text-mineral/60">
+                  <Usb className="w-3 h-3" />
+                  desktop chrome · webhid
+                </span>
+              </div>
+            </a>
+
+            {/* Coming soon + contribute */}
+            <div className="glass-card rounded-3xl p-7 md:p-8 relative overflow-hidden" style={{ opacity: 0 }}>
+              <p className="font-mono-brand text-[10px] uppercase tracking-[0.2em] text-signal mb-4">
+                More DACs — coming soon
+              </p>
+              <div className="flex flex-wrap gap-2 mb-5">
+                {comingSoon.map((m) => (
+                  <span
+                    key={m}
+                    className="text-[11px] px-3 py-1.5 rounded-full bg-white/[0.02] border border-dashed border-white/[0.1] text-mineral/70"
+                  >
+                    {m}
+                  </span>
+                ))}
+              </div>
+              <p className="text-mineral text-sm leading-relaxed">
+                Got a DAC and a little curiosity? Capture its control protocol and add it — no need to
+                part with your device. The goal is one open platform that speaks to all of them.
+              </p>
+            </div>
+
+            {/* GitHub */}
+            <a
+              href="https://github.com/Chandru03/ibasso-dc03-pro-macos"
+              target="_blank"
+              rel="noopener"
+              className="glass-card glass-card-hover rounded-3xl p-6 flex items-center justify-between group"
+              style={{ opacity: 0 }}
+            >
+              <span className="inline-flex items-center gap-3 text-salt font-medium text-sm">
+                <Github className="w-5 h-5 text-mineral group-hover:text-salt transition-colors duration-300" />
+                Contribute on GitHub
+              </span>
+              <ArrowUpRight className="w-4 h-4 text-mineral transition-all duration-300 group-hover:text-signal group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 /* ─── Main App ─── */
 function App() {
   useEffect(() => {
@@ -1516,6 +1732,7 @@ function App() {
       <About />
       <Highlights />
       <SpilllSneakPeek />
+      <DacControl />
       <Philosophy />
       <Status />
       <Footer />
