@@ -1560,7 +1560,6 @@ const DacControl = () => {
   ];
 
   const controlChips = ['Digital filter', 'Gain', 'Output mode', 'Volume', 'Balance', 'Presets'];
-  const comingSoon = ['iBasso DC Elite', 'FiiO KA series', 'Moondrop Dawn', 'Qudelix 5K', 'your DAC?'];
 
   return (
     <section
@@ -1673,41 +1672,73 @@ const DacControl = () => {
               </div>
             </a>
 
-            {/* Coming soon + contribute */}
+            {/* Why + how to contribute */}
             <div className="glass-card rounded-3xl p-7 md:p-8 relative overflow-hidden" style={{ opacity: 0 }}>
               <p className="font-mono-brand text-[10px] uppercase tracking-[0.2em] text-signal mb-4">
-                More DACs — coming soon
+                An initiative for audiophiles
               </p>
-              <div className="flex flex-wrap gap-2 mb-5">
-                {comingSoon.map((m) => (
-                  <span
-                    key={m}
-                    className="text-[11px] px-3 py-1.5 rounded-full bg-white/[0.02] border border-dashed border-white/[0.1] text-mineral/70"
-                  >
-                    {m}
-                  </span>
-                ))}
-              </div>
               <p className="text-mineral text-sm leading-relaxed">
-                Got a DAC and a little curiosity? Capture its control protocol and add it — no need to
-                part with your device. The goal is one open platform that speaks to all of them.
+                This is an open-source initiative to make the everyday experience of audiophiles a
+                little better — one free, browser-based control surface for the DACs we already own.
+                It's free for everyone, forever. No account, no catch.
+              </p>
+              <p className="text-mineral text-sm leading-relaxed mt-4">
+                If you'd like to help it grow, there are two ways — and both are entirely optional:
+              </p>
+              <div className="mt-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <span className="mt-0.5 w-7 h-7 shrink-0 rounded-full bg-signal/10 border border-signal/25 flex items-center justify-center">
+                    <Github className="w-3.5 h-3.5 text-signal" />
+                  </span>
+                  <p className="text-mineral text-sm leading-relaxed">
+                    <span className="text-salt font-medium">Contribute to the project</span> — code, protocol
+                    captures, testing, or docs.
+                  </p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="mt-0.5 w-7 h-7 shrink-0 rounded-full bg-signal/10 border border-signal/25 flex items-center justify-center">
+                    <Headphones className="w-3.5 h-3.5 text-signal" />
+                  </span>
+                  <p className="text-mineral text-sm leading-relaxed">
+                    <span className="text-salt font-medium">Lend me your DAC</span> — so I can map its controls
+                    and add first-class support for your model.
+                  </p>
+                </div>
+              </div>
+              <p className="text-mineral/70 text-xs leading-relaxed mt-5">
+                Only for those who want to pitch in. Everyone else can just enjoy it, free.
               </p>
             </div>
 
-            {/* GitHub */}
-            <a
-              href="https://github.com/Chandru03/ibasso-dc03-pro-macos"
-              target="_blank"
-              rel="noopener"
-              className="glass-card glass-card-hover rounded-3xl p-6 flex items-center justify-between group"
-              style={{ opacity: 0 }}
-            >
-              <span className="inline-flex items-center gap-3 text-salt font-medium text-sm">
-                <Github className="w-5 h-5 text-mineral group-hover:text-salt transition-colors duration-300" />
-                Contribute on GitHub
-              </span>
-              <ArrowUpRight className="w-4 h-4 text-mineral transition-all duration-300 group-hover:text-signal group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-            </a>
+            {/* Links: GitHub + forum */}
+            <div className="grid sm:grid-cols-2 gap-4">
+              <a
+                href="https://github.com/Chandru03/ibasso-dc03-pro-macos"
+                target="_blank"
+                rel="noopener"
+                className="glass-card glass-card-hover rounded-3xl p-6 flex items-center justify-between group"
+                style={{ opacity: 0 }}
+              >
+                <span className="inline-flex items-center gap-3 text-salt font-medium text-sm">
+                  <Github className="w-5 h-5 text-mineral group-hover:text-salt transition-colors duration-300" />
+                  GitHub
+                </span>
+                <ArrowUpRight className="w-4 h-4 text-mineral transition-all duration-300 group-hover:text-signal group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </a>
+              <a
+                href="https://www.theindianaudiophileforum.com/u/4d20f4c3"
+                target="_blank"
+                rel="noopener"
+                className="glass-card glass-card-hover rounded-3xl p-6 flex items-center justify-between group"
+                style={{ opacity: 0 }}
+              >
+                <span className="inline-flex items-center gap-3 text-salt font-medium text-sm">
+                  <MessageCircle className="w-5 h-5 text-mineral group-hover:text-salt transition-colors duration-300" />
+                  Reach me on the forum
+                </span>
+                <ArrowUpRight className="w-4 h-4 text-mineral transition-all duration-300 group-hover:text-signal group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </a>
+            </div>
           </div>
         </div>
       </div>
