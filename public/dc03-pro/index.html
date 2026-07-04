@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>DC03 PRO — Control</title>
+  <meta name="description" content="Browser-based controller for the iBasso DC03 Pro USB DAC. Runs entirely on your device via WebHID — no account, no server." />
+  <meta name="theme-color" content="#000000" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><g fill='white'><circle cx='6' cy='6' r='2'/><circle cx='12' cy='6' r='2'/><circle cx='18' cy='6' r='2'/><circle cx='6' cy='12' r='2'/><circle cx='12' cy='12' r='2'/><circle cx='18' cy='12' r='2'/><circle cx='6' cy='18' r='2'/><circle cx='12' cy='18' r='2'/><circle cx='18' cy='18' r='2'/></g></svg>" />
+</head>
+<body>
+  <main class="wrap">
+    <header class="topbar">
+      <div class="brand">
+        <span class="mark" aria-hidden="true"></span>
+        <span class="word">
+          <span class="name">DC03&nbsp;PRO</span>
+          <span class="tag">CONTROL / WEBHID</span>
+        </span>
+      </div>
+      <button id="connectBtn" class="connect" type="button">
+        <span id="statusDot" class="live" aria-hidden="true"></span>
+        <span id="connectLabel">CONNECT</span>
+      </button>
+    </header>
+
+    <!-- Unsupported browsers / preview mode -->
+    <section id="unsupported" class="card notice" hidden>
+      <h2>PREVIEW ONLY</h2>
+      <p>
+        This browser has no <strong>WebHID</strong>, so it can’t talk to the DAC —
+        the controls below are shown for layout only. iPhone/iPad and Safari/Firefox
+        don’t support it.
+      </p>
+      <p class="dim">To actually control the DAC, use desktop <strong>Chrome, Edge, Opera, or Brave</strong>.</p>
+    </section>
+
+    <div id="app">
+      <p id="feedback" class="feedback" aria-live="polite"></p>
+
+      <div class="grid">
+        <!-- LEVEL: volume + balance -->
+        <section class="card hero span-all">
+          <div class="hero-head">
+            <span class="klabel">VOLUME</span>
+            <span class="hero-right">
+              <span id="deviceEvent" class="device-event" aria-live="polite"></span>
+              <span id="volReadout" class="klabel dim">75</span>
+            </span>
+          </div>
+          <div id="volDots" class="dotmatrix" role="img" aria-label="Volume level"></div>
+          <input type="range" id="volumeSlider" class="fader" min="0" max="100" value="75" aria-label="Volume" />
+
+          <div class="hero-divider"></div>
+
+          <div class="hero-head">
+            <span class="klabel">BALANCE</span>
+            <span id="balReadout" class="klabel dim">CENTER</span>
+          </div>
+          <div class="balance">
+            <span class="end">L</span>
+            <input type="range" id="balanceSlider" class="fader" min="-50" max="50" value="0" aria-label="Balance" />
+            <span class="end">R</span>
+          </div>
+        </section>
+
+        <!-- PRESETS -->
+        <section class="card">
+          <span class="klabel block">PRESETS</span>
+          <div id="presetGrid" class="preset-grid"></div>
+        </section>
+
+        <!-- SOUND -->
+        <section class="card">
+          <span class="klabel block">SOUND</span>
+
+          <div class="field">
+            <div class="field-head">
+              <span class="fname">FILTER</span>
+              <span id="filterName" class="fval">FAST ROLL-OFF</span>
+            </div>
+            <div id="filterSeg" class="segmented" role="group" aria-label="Digital filter"></div>
+          </div>
+
+          <div class="field">
+            <div class="field-head"><span class="fname">GAIN</span></div>
+            <div id="gainSeg" class="segmented" role="group" aria-label="Gain"></div>
+          </div>
+
+          <div class="field">
+            <div class="field-head"><span class="fname">OUTPUT</span></div>
+            <div id="outputSeg" class="segmented" role="group" aria-label="Output mode"></div>
+          </div>
+        </section>
+
+        <!-- DEVELOPER -->
+        <section class="card span-all">
+          <button id="rawToggle" class="disclosure" type="button" aria-expanded="false">
+            <span>DEVELOPER / RAW HID</span><span class="chev">+</span>
+          </button>
+        <div id="rawPanel" class="raw" hidden>
+          <div class="field-head">
+            <span class="fname">LIVE HID INPUT</span>
+            <span id="monStatus" class="fval dim">IDLE</span>
+          </div>
+          <div id="monitor" class="monitor"></div>
+          <p class="hint">Press the DAC's buttons to see the reports it sends. Changed bytes are highlighted.</p>
+
+          <div class="field-head" style="margin-top:20px">
+            <span class="fname">SEND RAW</span>
+          </div>
+          <p class="hint">Arbitrary 16-byte output report, hex. Unfilled bytes are zero.</p>
+          <textarea id="rawInput" rows="2" spellcheck="false" placeholder="11 11 88 60 00 00 05 09 00 00 00 00 00 00 00 00"></textarea>
+          <button id="rawSend" class="btn" type="button">SEND REPORT</button>
+          <p class="hint warn">Raw reports are unchecked. Keep playback volume low.</p>
+        </div>
+      </section>
+      </div><!-- /.grid -->
+
+      <footer class="foot">
+        <p>RUNS ENTIRELY ON YOUR DEVICE / NOTHING IS UPLOADED</p>
+        <p><a href="https://github.com/Chandru03/ibasso-dc03-pro-macos" target="_blank" rel="noopener">SOURCE ON GITHUB</a></p>
+        <p><a href="/">← BACK TO SALTLAB</a></p>
+        <p class="dim">Not affiliated with iBasso or Nothing Technology.</p>
+      </footer>
+    </div>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
